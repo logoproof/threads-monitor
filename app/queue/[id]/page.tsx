@@ -1,3 +1,4 @@
+import { formatDateTimeWIB } from '@/lib/date-utils';
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -68,7 +69,7 @@ export default async function ContentDetailPage({
           <div>
             <span className="text-slate-400 block">Jadwal Publish</span>
             <span className="font-medium text-slate-700 dark:text-slate-200">
-              {post.tscheduled_at ? post.tscheduled_at.replace('Date(', '').replace(')', '') : 'Belum dijadwalkan'}
+              {post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : 'Belum dijadwalkan'}
             </span>
           </div>
           <div>

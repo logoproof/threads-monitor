@@ -90,6 +90,26 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   };
 }
 
+export async function updatePostSchedule(id: string, scheduledAt: string | null): Promise<{ success: boolean; error?: string }> {
+  try {
+    const rows = await getSheetRows('ANTREAN', 'A2:A');
+    const rowIndex = rows.findIndex(r => r && String(r[0]).trim() === id.trim());
+    if (rowIndex === -1) {
+      return { success: false, error: `Konten ${id} tidak ditemukan di sheet.` };
+    }
+
+    const actualRow = rowIndex + 2;
+    // Column F (tscheduled_at). Store as WIB wall-clock text, matching the Sheet data.
+    const value = scheduledAt
+      ? scheduledAt.replace('T', ' ') + ':00'
+      : '';
+    await updateSheetCell('ANTREAN', actualRow, 6, value);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Gagal mengubah jadwal.' };
+  }
+}
+
 export async function updatePostStatus(id: string, newStatus: PostStatus): Promise<{ success: boolean; error?: string }> {
   try {
     const rows = await getSheetRows('ANTREAN', 'A2:A');

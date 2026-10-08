@@ -48,11 +48,18 @@ export async function getSheetRows(sheetName: string, rangeA1: string): Promise<
   return fetchSheetGviz(spreadsheetId, sheetName);
 }
 
-export async function updateSheetCell(rangeA1: string, value: string): Promise<boolean> {
+export async function updateSheetCell(
+  sheetName: string,
+  rowNumber: number,
+  columnNumber: number,
+  value: string
+): Promise<boolean> {
   const spreadsheetId = getSpreadsheetId();
 
   if (!hasServiceAccount()) {
-    throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON belum dikonfigurasi. Penulisan ke Google Sheets memerlukan Service Account.');
+    throw new Error(
+      'GOOGLE_SERVICE_ACCOUNT_JSON belum dikonfigurasi. Penulisan ke Google Sheets memerlukan Service Account.'
+    );
   }
 
   const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!);
@@ -62,12 +69,51 @@ export async function updateSheetCell(rangeA1: string, value: string): Promise<b
   });
   const sheets = google.sheets({ version: 'v4', auth });
 
-  await sheets.spreadsheets.values.update({
+  // Resolve the tab's numeric sheetId first, then write using GridRange.
+  // This avoids A1 parser issues with sheet names containing spaces.
+  const metadata = await sheets.spreadsheets.get({
     spreadsheetId,
-    range: rangeA1,
-    valueInputOption: 'USER_ENTERED',
+    fields: 'sheets.properties(sheetId,title)',
+  });
+
+  const sheet = (metadata.data.sheets || []).find(
+    (item) => item.properties?.title === sheetName
+  );
+
+  if (!sheet?.properties?.sheetId && sheet?.properties?.sheetId !== 0) {
+    throw new Error(`Sheet "${sheetName}" tidak ditemukan.`);
+  }
+
+  const sheetId = sheet.properties.sheetId;
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
     requestBody: {
-      values: [[value]],
+      requests: [
+        {
+          updateCells: {
+            range: {
+              sheetId,
+              startRowIndex: rowNumber - 1,
+              endRowIndex: rowNumber,
+              startColumnIndex: columnNumber - 1,
+              endColumnIndex: columnNumber,
+            },
+            rows: [
+              {
+                values: [
+                  {
+                    userEnteredValue: {
+                      stringValue: value,
+                    },
+                  },
+                ],
+              },
+            ],
+            fields: 'userEnteredValue',
+          },
+        },
+      ],
     },
   });
 

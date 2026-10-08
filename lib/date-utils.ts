@@ -82,7 +82,7 @@ function parseSheetDate(value: string | null | undefined): Date | null {
   // Google Visualization datetime:
   // Date(2026,9,8,13,30,0) — month is zero-based.
   const gviz = raw.match(
-    /^Date\\((\\d{4}),(\\d{1,2}),(\\d{1,2})(?:,(\\d{1,2}),(\\d{1,2}),(\\d{1,2}))?\\)$/
+    /^Date\((\d{4}),(\d{1,2}),(\d{1,2})(?:,(\d{1,2}),(\d{1,2}),(\d{1,2}))?\)$/
   );
 
   if (gviz) {
@@ -98,7 +98,7 @@ function parseSheetDate(value: string | null | undefined): Date | null {
   }
 
   // ISO values carrying an explicit timezone/offset are already absolute.
-  if (/([zZ]|[+-]\\d{2}:?\\d{2})$/.test(raw)) {
+  if (/([zZ]|[+-]\d{2}:?\d{2})$/.test(raw)) {
     const parsed = new Date(raw);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
@@ -106,7 +106,7 @@ function parseSheetDate(value: string | null | undefined): Date | null {
   // Values returned as formatted strings by the Sheets API, e.g.
   // "2026-10-07 16:30:00". Treat them as spreadsheet-local wall time.
   const match = raw.match(
-    /^(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})(?:[ T](\\d{1,2}):(\\d{2})(?::(\\d{2}))?)?$/
+    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
   );
 
   if (match) {

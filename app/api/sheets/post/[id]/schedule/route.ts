@@ -17,7 +17,7 @@ export async function PATCH(
       return NextResponse.json({ success: true, message: \`Jadwal \${params.id} dihapus.\` });
     }
 
-    if (typeof scheduledAt !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(scheduledAt)) {
+    if (typeof scheduledAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(scheduledAt)) {
       return NextResponse.json({ error: 'Format jadwal tidak valid. Gunakan tanggal dan jam yang valid.' }, { status: 400 });
     }
 

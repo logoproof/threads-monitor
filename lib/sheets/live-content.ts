@@ -5,6 +5,7 @@
 // ============================================================
 import { getSheetRows, updateSheetCell } from '@/lib/google-auth';
 import { ThreadsPost, PostStatus, DashboardStats } from '@/lib/types';
+import { timestampWIB } from '@/lib/date-utils';
 
 function parseRow(row: any[]): ThreadsPost {
   let scheduledAt: string | null = null;
@@ -40,7 +41,7 @@ export async function getPostById(id: string): Promise<ThreadsPost | null> {
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   const posts = await getAllPosts();
-  const today = new Date().toDateString();
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 
   const byStatus: Record<PostStatus, number> = {
     draft: 0,
@@ -58,7 +59,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const publishedToday = posts.filter(p => {
     if (p.tstatus !== 'published' || !p.tscheduled_at) return false;
     try {
-      return new Date(p.tscheduled_at).toDateString() === today;
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date(timestampWIB(p.tscheduled_at))) === today;
     } catch {
       return false;
     }
@@ -72,10 +73,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .filter(p => p.tstatus === 'published' && p.tscheduled_at)
     .sort((a, b) => {
       try {
-        return (
-          new Date(b.tscheduled_at!).getTime() -
-          new Date(a.tscheduled_at!).getTime()
-        );
+        return timestampWIB(b.tscheduled_at) - timestampWIB(a.tscheduled_at);
       } catch {
         return 0;
       }

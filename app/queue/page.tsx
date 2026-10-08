@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { getAllPosts } from '@/lib/sheets/live-content';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { StatusSelector } from '@/components/ui/StatusSelector';
+import { ScheduleEditor } from '@/components/ui/ScheduleEditor';
 
 export const revalidate = 60;
 
@@ -104,7 +105,10 @@ export default async function QueuePage({
                       <StatusSelector id={post.id} currentStatus={post.tstatus} />
                     </td>
                     <td className="py-3.5 px-4 text-xs text-slate-500">
-                      {post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : '—'}
+                      <div className="flex items-center gap-2">
+                        <span>{post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : 'Belum dijadwalkan'}</span>
+                        <ScheduleEditor id={post.id} scheduledAt={post.tscheduled_at} compact />
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-xs text-slate-500">
                       {post.tthreads_post_id ? (

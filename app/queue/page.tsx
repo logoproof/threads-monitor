@@ -64,8 +64,8 @@ export default async function QueuePage({
         })}
       </div>
 
-      {/* Content Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+      {/* Desktop table */}
+      <div className="hidden md:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs text-slate-500 border-b border-slate-200 dark:border-slate-800">
@@ -79,65 +79,59 @@ export default async function QueuePage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredPosts.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500 text-sm">
-                    Tidak ada konten yang sesuai dengan filter.
-                  </td>
+              {filteredPosts.map((post) => (
+                <tr key={post.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                  <td className="py-3.5 px-4 font-mono text-xs font-bold text-slate-700 dark:text-slate-300">{post.id}</td>
+                  <td className="py-3.5 px-4"><div className="font-medium text-slate-900 dark:text-white">{post.ttema}</div>{post.terror && <div className="text-xs text-rose-500 font-mono mt-0.5 truncate max-w-sm">{post.terror}</div>}</td>
+                  <td className="py-3.5 px-4"><StatusSelector id={post.id} currentStatus={post.tstatus} /></td>
+                  <td className="py-3.5 px-4 text-xs text-slate-500"><div className="flex items-center gap-2"><span>{post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : 'Belum dijadwalkan'}</span><ScheduleEditor id={post.id} scheduledAt={post.tscheduled_at} compact /></div></td>
+                  <td className="py-3.5 px-4 font-mono text-xs text-slate-500">{post.tthreads_post_id ? <a href={`https://threads.net/t/${post.tthreads_post_id}`} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{post.tthreads_post_id} ↗</a> : '—'}</td>
+                  <td className="py-3.5 px-4 text-right"><Link href={`/queue/${post.id}`} className="inline-flex items-center px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Detail</Link></td>
                 </tr>
-              ) : (
-                filteredPosts.map((post) => (
-                  <tr key={post.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                    <td className="py-3.5 px-4 font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
-                      {post.id}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-medium text-slate-900 dark:text-white">
-                        {post.ttema}
-                      </div>
-                      {post.terror && (
-                        <div className="text-xs text-rose-500 font-mono mt-0.5 truncate max-w-sm">
-                          {post.terror}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <StatusSelector id={post.id} currentStatus={post.tstatus} />
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-slate-500">
-                      <div className="flex items-center gap-2">
-                        <span>{post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : 'Belum dijadwalkan'}</span>
-                        <ScheduleEditor id={post.id} scheduledAt={post.tscheduled_at} compact />
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-xs text-slate-500">
-                      {post.tthreads_post_id ? (
-                        <a
-                          href={`https://threads.net/t/${post.tthreads_post_id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          {post.tthreads_post_id} ↗
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <Link
-                        href={`/queue/${post.id}`}
-                        className="inline-flex items-center px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-                      >
-                        Detail
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {filteredPosts.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 text-center text-sm text-slate-500">Tidak ada konten yang sesuai dengan filter.</div>
+        ) : filteredPosts.map((post) => (
+          <article key={post.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-mono text-[11px] font-bold text-slate-500">{post.id}</span>
+                  <span className="text-[10px] text-slate-400">ANTREAN</span>
+                </div>
+                <h2 className="text-sm font-semibold leading-snug text-slate-900 dark:text-white">{post.ttema}</h2>
+              </div>
+              <Link href={`/queue/${post.id}`} className="shrink-0 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200">Detail</Link>
+            </div>
+
+            {post.terror && <div className="mt-3 rounded-lg bg-rose-50 dark:bg-rose-950/30 px-3 py-2 text-[10px] text-rose-600 dark:text-rose-300 break-words">{post.terror}</div>}
+
+            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 dark:border-slate-800 pt-3">
+              <div className="min-w-0">
+                <span className="block text-[10px] uppercase tracking-wide text-slate-400 mb-1">Status</span>
+                <StatusSelector id={post.id} currentStatus={post.tstatus} />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[10px] uppercase tracking-wide text-slate-400 mb-1">Jadwal</span>
+                <div className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : 'Belum dijadwalkan'}</div>
+                <ScheduleEditor id={post.id} scheduledAt={post.tscheduled_at} compact />
+              </div>
+            </div>
+
+            {post.tthreads_post_id && (
+              <a href={`https://threads.net/t/${post.tthreads_post_id}`} target="_blank" rel="noreferrer" className="mt-3 block truncate rounded-lg bg-slate-50 dark:bg-slate-800 px-3 py-2 text-[10px] font-mono text-blue-600 dark:text-blue-400">
+                Threads: {post.tthreads_post_id} ↗
+              </a>
+            )}
+          </article>
+        ))}
       </div>
     </div>
   );

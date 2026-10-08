@@ -33,6 +33,10 @@ export async function getSheetRows(sheetName: string, rangeA1: string): Promise<
       const res = await sheets.spreadsheets.values.get({
         spreadsheetId,
         range: `'${sheetName}'!${rangeA1}`,
+        // Keep Google Sheets' own formatted datetime representation.
+        // The date-utils layer interprets it in the spreadsheet timezone.
+        valueRenderOption: 'FORMATTED_VALUE',
+        dateTimeRenderOption: 'FORMATTED_STRING',
       });
       return res.data.values || [];
     } catch (err) {

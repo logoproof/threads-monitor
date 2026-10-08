@@ -99,8 +99,8 @@ export async function updatePostStatus(id: string, newStatus: PostStatus): Promi
     }
 
     const actualRow = rowIndex + 2;
-    const targetCell = `'Live Content'!E${actualRow}`;
-    await updateSheetCell(targetCell, newStatus);
+    // Column E (tstatus), using numeric GridRange to avoid A1 parsing issues.
+    await updateSheetCell('Live Content', actualRow, 5, newStatus);
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Gagal mengubah status.' };

@@ -7,6 +7,7 @@
 import { getSheetRows } from '@/lib/google-auth';
 import { ThreadsMetric, ContentMetricsSummary } from '@/lib/types';
 import { getAllPosts } from '@/lib/sheets/live-content';
+import { timestampWIB } from '@/lib/date-utils';
 
 function parseRow(row: any[]): ThreadsMetric {
   return {
@@ -51,12 +52,13 @@ export async function getAggregatedMetrics(): Promise<ContentMetricsSummary[]> {
   const summaries: ContentMetricsSummary[] = [];
 
   for (const [content_id, rows] of grouped.entries()) {
-    const latestCheckedAt = rows
-      .map(r => r.checked_at)
-      .sort()
-      .at(-1) ?? '';
+    const latestCheckedAt = rows.reduce((latest, row) =>
+      timestampWIB(row.checked_at) > timestampWIB(latest) ? row.checked_at : latest,
+      ''
+    );
 
-    const latestRows = rows.filter(r => r.checked_at === latestCheckedAt);
+    const latestTimestamp = timestampWIB(latestCheckedAt);
+    const latestRows = rows.filter(r => timestampWIB(r.checked_at) === latestTimestamp);
 
     summaries.push({
       content_id,

@@ -6,7 +6,7 @@
 import { google } from 'googleapis';
 import { fetchSheetGviz } from '@/lib/gviz-client';
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 export function getSpreadsheetId(): string {
   return (
@@ -42,4 +42,30 @@ export async function getSheetRows(sheetName: string, rangeA1: string): Promise<
 
   // Fallback to gviz public fetch
   return fetchSheetGviz(spreadsheetId, sheetName);
+}
+
+export async function updateSheetCell(rangeA1: string, value: string): Promise<boolean> {
+  const spreadsheetId = getSpreadsheetId();
+
+  if (!hasServiceAccount()) {
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON belum dikonfigurasi. Penulisan ke Google Sheets memerlukan Service Account.');
+  }
+
+  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!);
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: SCOPES,
+  });
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: rangeA1,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[value]],
+    },
+  });
+
+  return true;
 }

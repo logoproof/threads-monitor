@@ -3,7 +3,7 @@
 // Columns: id | ttema | tnaskah | tcatatan_editor | tstatus |
 //          tscheduled_at | tformat_publish | tthreads_post_id | terror
 // ============================================================
-import { getSheetRows } from '@/lib/google-auth';
+import { getSheetRows, updateSheetCell } from '@/lib/google-auth';
 import { ThreadsPost, PostStatus, DashboardStats } from '@/lib/types';
 
 function parseRow(row: any[]): ThreadsPost {
@@ -90,4 +90,21 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     lastPublishedAt: lastPublished?.tscheduled_at ?? null,
     topPost: null,
   };
+}
+
+export async function updatePostStatus(id: string, newStatus: PostStatus): Promise<{ success: boolean; error?: string }> {
+  try {
+    const rows = await getSheetRows('Live Content', 'A2:A');
+    const rowIndex = rows.findIndex(r => r && String(r[0]).trim() === id.trim());
+    if (rowIndex === -1) {
+      return { success: false, error: `Konten ${id} tidak ditemukan di sheet.` };
+    }
+
+    const actualRow = rowIndex + 2;
+    const targetCell = `'Live Content'!E${actualRow}`;
+    await updateSheetCell(targetCell, newStatus);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Gagal mengubah status.' };
+  }
 }

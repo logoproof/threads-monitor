@@ -5,6 +5,7 @@ import { getPostById } from '@/lib/sheets/live-content';
 import { getPartsByContentId } from '@/lib/sheets/parts';
 import { getMetricsByContentId } from '@/lib/sheets/metrics';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { StatusSelector } from '@/components/ui/StatusSelector';
 
 export const revalidate = 60;
 
@@ -39,7 +40,7 @@ export default async function ContentDetailPage({
           <div>
             <div className="flex items-center gap-3">
               <span className="font-mono text-sm font-bold text-slate-500">{post.id}</span>
-              <StatusBadge status={post.tstatus} />
+              <StatusSelector id={post.id} currentStatus={post.tstatus} />
             </div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white mt-2">
               {post.ttema}

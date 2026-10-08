@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { getAllPosts } from '@/lib/sheets/live-content';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { StatusSelector } from '@/components/ui/StatusSelector';
 
 export const revalidate = 60;
 
@@ -99,7 +100,7 @@ export default async function QueuePage({
                       )}
                     </td>
                     <td className="py-3.5 px-4">
-                      <StatusBadge status={post.tstatus} />
+                      <StatusSelector id={post.id} currentStatus={post.tstatus} />
                     </td>
                     <td className="py-3.5 px-4 text-xs text-slate-500">
                       {post.tscheduled_at ? post.tscheduled_at.replace('Date(', '').replace(')', '') : '—'}

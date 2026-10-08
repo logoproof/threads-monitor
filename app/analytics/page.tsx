@@ -1,3 +1,4 @@
+import { formatDateTimeWIB } from '@/lib/date-utils';
 import React from 'react';
 import { getAggregatedMetrics } from '@/lib/sheets/metrics';
 
@@ -91,7 +92,7 @@ export default async function AnalyticsPage() {
                       {m.total_interactions}
                     </td>
                     <td className="py-3 px-4 text-right text-xs text-slate-400">
-                      {m.checked_at ? m.checked_at.replace('Date(', '').replace(')', '') : '—'}
+                      {m.checked_at ? formatDateTimeWIB(m.checked_at) : '—'}
                     </td>
                   </tr>
                 ))

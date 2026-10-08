@@ -1,5 +1,5 @@
 // ============================================================
-// Fetch helper: Sheet "Live Content"
+// Fetch helper: Sheet "ANTREAN"
 // Columns: id | ttema | tnaskah | tcatatan_editor | tstatus |
 //          tscheduled_at | tformat_publish | tthreads_post_id | terror
 // ============================================================
@@ -28,7 +28,7 @@ function parseRow(row: any[]): ThreadsPost {
 }
 
 export async function getAllPosts(): Promise<ThreadsPost[]> {
-  const rows = await getSheetRows('Live Content', 'A2:I');
+  const rows = await getSheetRows('ANTREAN', 'A2:I');
   return rows
     .filter(row => row && row[0])
     .map(parseRow);
@@ -92,7 +92,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 export async function updatePostStatus(id: string, newStatus: PostStatus): Promise<{ success: boolean; error?: string }> {
   try {
-    const rows = await getSheetRows('Live Content', 'A2:A');
+    const rows = await getSheetRows('ANTREAN', 'A2:A');
     const rowIndex = rows.findIndex(r => r && String(r[0]).trim() === id.trim());
     if (rowIndex === -1) {
       return { success: false, error: `Konten ${id} tidak ditemukan di sheet.` };
@@ -100,7 +100,7 @@ export async function updatePostStatus(id: string, newStatus: PostStatus): Promi
 
     const actualRow = rowIndex + 2;
     // Column E (tstatus), using numeric GridRange to avoid A1 parsing issues.
-    await updateSheetCell('Live Content', actualRow, 5, newStatus);
+    await updateSheetCell('ANTREAN', actualRow, 5, newStatus);
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Gagal mengubah status.' };

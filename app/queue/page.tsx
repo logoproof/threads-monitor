@@ -38,7 +38,7 @@ export default async function QueuePage({
           Content Queue & Pipeline
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Daftar seluruh draft, konten terjadwal, dan riwayat publikasi (Sheet: Live Content).
+          Daftar seluruh draft, konten terjadwal, dan riwayat publikasi (Sheet: ANTREAN).
         </p>
       </div>
 

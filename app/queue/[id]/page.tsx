@@ -7,6 +7,7 @@ import { getPartsByContentId } from '@/lib/sheets/parts';
 import { getMetricsByContentId } from '@/lib/sheets/metrics';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { StatusSelector } from '@/components/ui/StatusSelector';
+import { ScheduleEditor } from '@/components/ui/ScheduleEditor';
 
 export const revalidate = 60;
 
@@ -71,6 +72,9 @@ export default async function ContentDetailPage({
             <span className="font-medium text-slate-700 dark:text-slate-200">
               {post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : 'Belum dijadwalkan'}
             </span>
+            <div className="mt-1">
+              <ScheduleEditor id={post.id} scheduledAt={post.tscheduled_at} />
+            </div>
           </div>
           <div>
             <span className="text-slate-400 block">Format Publish</span>

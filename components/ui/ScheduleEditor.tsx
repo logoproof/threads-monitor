@@ -66,7 +66,8 @@ export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEdi
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 right-0 w-72 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-xl">
+        <div className="fixed inset-0 z-[100] bg-black/30 backdrop-blur-[1px] sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-80 sm:bg-transparent sm:backdrop-blur-none">
+          <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:static sm:rounded-xl sm:p-4">
           <div className="flex items-center justify-between mb-3">
             <div><h3 className="text-sm font-semibold text-slate-900 dark:text-white">Edit Jadwal Publish</h3><p className="text-[10px] text-slate-500 mt-0.5">Waktu Indonesia Barat (WIB)</p></div>
             <button type="button" onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-700"><X className="w-4 h-4" /></button>
@@ -80,6 +81,7 @@ export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEdi
               <button type="button" onClick={() => setOpen(false)} disabled={saving} className="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">Batal</button>
               <button type="button" onClick={save} disabled={saving} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white dark:bg-white dark:text-slate-900 disabled:opacity-50">{saving ? 'Menyimpan…' : 'Simpan'}</button>
             </div>
+          </div>
           </div>
         </div>
       )}

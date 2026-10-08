@@ -1,3 +1,4 @@
+import { formatDateTimeWIB } from '@/lib/date-utils';
 import React from 'react';
 import Link from 'next/link';
 import { getAllPosts } from '@/lib/sheets/live-content';
@@ -103,7 +104,7 @@ export default async function QueuePage({
                       <StatusSelector id={post.id} currentStatus={post.tstatus} />
                     </td>
                     <td className="py-3.5 px-4 text-xs text-slate-500">
-                      {post.tscheduled_at ? post.tscheduled_at.replace('Date(', '').replace(')', '') : '—'}
+                      {post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : '—'}
                     </td>
                     <td className="py-3.5 px-4 font-mono text-xs text-slate-500">
                       {post.tthreads_post_id ? (

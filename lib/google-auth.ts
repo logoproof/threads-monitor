@@ -76,12 +76,25 @@ export async function updateSheetCell(
     fields: 'sheets.properties(sheetId,title)',
   });
 
+  const normalizeSheetTitle = (title: string) =>
+    title.trim().replace(/\\s+/g, ' ').toLowerCase();
+
+  const requestedTitle = normalizeSheetTitle(sheetName);
   const sheet = (metadata.data.sheets || []).find(
-    (item) => item.properties?.title === sheetName
+    (item) =>
+      item.properties?.title &&
+      normalizeSheetTitle(item.properties.title) === requestedTitle
   );
 
   if (!sheet?.properties?.sheetId && sheet?.properties?.sheetId !== 0) {
-    throw new Error(`Sheet "${sheetName}" tidak ditemukan.`);
+    const availableSheets = (metadata.data.sheets || [])
+      .map((item) => item.properties?.title)
+      .filter(Boolean)
+      .join(', ');
+
+    throw new Error(
+      `Sheet "${sheetName}" tidak ditemukan pada spreadsheet ${spreadsheetId}. Tab yang terlihat oleh Service Account: ${availableSheets || '(tidak ada)'}`
+    );
   }
 
   const sheetId = sheet.properties.sheetId;

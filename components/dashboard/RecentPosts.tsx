@@ -1,3 +1,4 @@
+import { formatDateTimeWIB } from '@/lib/date-utils';
 import React from 'react';
 import Link from 'next/link';
 import { ThreadsPost } from '@/lib/types';
@@ -42,7 +43,7 @@ export function RecentPosts({ posts }: { posts: ThreadsPost[] }) {
                   <StatusBadge status={post.tstatus} />
                 </td>
                 <td className="py-3 text-xs text-slate-500">
-                  {post.tscheduled_at ? post.tscheduled_at.replace('Date(', '').replace(')', '') : '—'}
+                  {post.tscheduled_at ? formatDateTimeWIB(post.tscheduled_at) : '—'}
                 </td>
                 <td className="py-3 text-right">
                   <Link

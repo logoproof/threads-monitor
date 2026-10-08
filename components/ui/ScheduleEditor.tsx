@@ -15,7 +15,7 @@ function toInputValue(value: string | null): string {
   const match = value.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
   if (!match) return '';
   const [, y, m, d, h = '0', min = '0'] = match;
-  return \`\${y}-\${m.padStart(2, '0')}-\${d.padStart(2, '0')}T\${h.padStart(2, '0')}:\${min}\`;
+  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T${h.padStart(2, '0')}:${min}`;
 }
 
 export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEditorProps) {
@@ -32,7 +32,7 @@ export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEdi
     if (!value) { setMessage('Pilih tanggal dan jam terlebih dahulu.'); return; }
     setSaving(true); setMessage(null);
     try {
-      const res = await fetch(\`/api/sheets/post/\${id}/schedule\`, {
+      const res = await fetch(`/api/sheets/post/${id}/schedule`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scheduledAt: value }),
       });
@@ -47,7 +47,7 @@ export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEdi
     if (!window.confirm('Hapus jadwal publish untuk konten ini?')) return;
     setSaving(true); setMessage(null);
     try {
-      const res = await fetch(\`/api/sheets/post/\${id}/schedule\`, {
+      const res = await fetch(`/api/sheets/post/${id}/schedule`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scheduledAt: null }),
       });

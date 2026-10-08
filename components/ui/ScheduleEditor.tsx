@@ -12,7 +12,7 @@ interface ScheduleEditorProps {
 
 function toInputValue(value: string | null): string {
   if (!value) return '';
-  const match = value.match(/^(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})(?:[ T](\\d{1,2}):(\\d{2}))?/);
+  const match = value.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
   if (!match) return '';
   const [, y, m, d, h = '0', min = '0'] = match;
   return \`\${y}-\${m.padStart(2, '0')}-\${d.padStart(2, '0')}T\${h.padStart(2, '0')}:\${min}\`;

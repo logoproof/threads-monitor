@@ -1,3 +1,4 @@
+import { formatDateTimeWIB } from '@/lib/date-utils';
 import React from 'react';
 import { getHealthLog, getLatestHealthByComponent } from '@/lib/sheets/health-log';
 
@@ -89,7 +90,7 @@ export default async function HealthPage() {
                 logs.map((entry, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                     <td className="py-3 px-4 text-xs font-mono text-slate-500">
-                      {entry.checked_at}
+                      {formatDateTimeWIB(entry.checked_at)}
                     </td>
                     <td className="py-3 px-4 font-medium text-slate-900 dark:text-white">
                       {entry.component}

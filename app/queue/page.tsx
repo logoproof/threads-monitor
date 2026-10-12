@@ -1,9 +1,9 @@
 'use client';
 
 import { formatDateTimeWIB } from '@/lib/date-utils';
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { ThreadsPost } from '@/lib/types';
 import { StatusSelector } from '@/components/ui/StatusSelector';
 import { ScheduleEditor } from '@/components/ui/ScheduleEditor';
@@ -28,35 +28,68 @@ export default function QueuePage() {
 }
 
 function QueueContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const pageParam = searchParams.get('page');
-  const currentPage = pageParam ? Math.max(1, Number(pageParam)) : 1;
-  const [loading, setLoading] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(searchParams.get('status'));
-  const [sortKey, setSortKey] = useState<string>(searchParams.get('sort') || 'id');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '');
+  const [sortKey, setSortKey] = useState(searchParams.get('sort') || 'id');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>(searchParams.get('sortdir') === 'asc' ? 'asc' : 'desc');
+  const [page, setPage] = useState(Math.max(1, Number(searchParams.get('page')) || 1));
 
-  const debouncedSearch = useMemo(() => {
-    const delay = setTimeout(() => {
-      const params = new URLSearchParams();
-      params.set('q', searchQuery);
-      if (statusFilter) params.set('status', statusFilter);
-      params.set('sort', sortKey);
-      params.set('sortdir', sortDir);
-      params.set('page', '1');
-      router.push(`/queue?${params.toString()}`, { scroll: false });
-    }, 300);
-    return () => clearTimeout(delay);
-  }, [searchQuery, statusFilter, sortKey, sortDir, router]);
+  const [data, setData] = useState<{ posts: ThreadsPost[]; total: number }>({ posts: [], total: 0 });
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
-    debouncedSearch();
-  }, [searchQuery, statusFilter, sortKey, sortDir]);
+  // Fetch data
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
 
-  const offset = (currentPage - 1) * PAGE_SIZE;
-  const { data, error, isLoading } = useAwaitData(searchQuery, statusFilter, sortKey, sortDir, PAGE_SIZE, offset);
+    const params = new URLSearchParams({
+      limit: String(PAGE_SIZE),
+      offset: String((page - 1) * PAGE_SIZE),
+      sortBy: sortKey,
+      sortDir,
+      q: searchQuery,
+    });
+    if (statusFilter) params.set('status', statusFilter);
+
+    fetch(`/api/queue?${params.toString()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Gagal memuat data');
+        return res.json();
+      })
+      .then((result) => {
+        if (!cancelled) { setData(result); setIsLoading(false); }
+      })
+      .catch((err) => {
+        if (!cancelled) { setError(err.message || 'Terjadi kesalahan'); setIsLoading(false); }
+      });
+
+    return () => { cancelled = true; };
+  }, [searchQuery, statusFilter, sortKey, sortDir, page]);
+
+  // Debounce search → reset page ke 1
+  useEffect(() => {
+    const timer = setTimeout(() => setPage(1), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, statusFilter]);
+
+  const handleSort = useCallback((colKey: string) => {
+    if (sortKey === colKey) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(colKey);
+      setSortDir('desc');
+    }
+  }, [sortKey]);
+
+  const handlePage = useCallback((dir: 'prev' | 'next') => {
+    setPage(p => dir === 'prev' ? Math.max(1, p - 1) : p + 1);
+  }, []);
+
+  const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -85,12 +118,9 @@ function QueueContent() {
           {STATUSES.map((st) => (
             <button
               key={st}
-              onClick={() => {
-                setStatusFilter(statusFilter === st ? null : st);
-                router.push(`/queue?status=${st ? st : ''}&q=${searchQuery}&sort=${sortKey}&sortdir=${sortDir}&page=1`, { scroll: false });
-              }}
+              onClick={() => { setStatusFilter(st === 'all' ? '' : st); setPage(1); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors whitespace-nowrap ${
-                statusFilter === st || (statusFilter === null && st === 'all')
+                statusFilter === st || (statusFilter === '' && st === 'all')
                   ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
@@ -125,22 +155,13 @@ function QueueContent() {
                       {SORT_COLUMNS.map((col) => (
                         <th
                           key={col.key}
-                          onClick={() => {
-                            if (sortKey === col.key) {
-                              setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-                              router.push(`/queue?sort=${col.key}&sortdir=${sortDir === 'asc' ? 'desc' : 'asc'}&page=${currentPage}`, { scroll: false });
-                            } else {
-                              setSortKey(col.key);
-                              setSortDir('desc');
-                              router.push(`/queue?sort=${col.key}&sortdir=desc&page=${currentPage}`, { scroll: false });
-                            }
-                          }}
+                          onClick={() => handleSort(col.key)}
                           className="py-3.5 px-4 font-semibold cursor-pointer select-none hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
                         >
                           <div className="flex items-center gap-1.5">
                             {col.label}
                             {sortKey === col.key ? (
-                              sortDir === 'asc' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />
+                              sortDir === 'asc' ? <ChevronUp className="w-3.5 h-3.5 text-blue-600" /> : <ChevronDown className="w-3.5 h-3.5 text-blue-600" />
                             ) : (
                               <ChevronUp className="w-3 h-3 opacity-25" />
                             )}
@@ -187,22 +208,22 @@ function QueueContent() {
             {/* Pagination */}
             <div className="flex items-center justify-between gap-4 mt-4">
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Menampilkan {Math.min(offset + 1, data.total)} - {Math.min(offset + PAGE_SIZE, data.total)} dari {data.total} konten
+                Menampilkan {Math.min((page - 1) * PAGE_SIZE + 1, data.total)} - {Math.min(page * PAGE_SIZE, data.total)} dari {data.total} konten
               </p>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => router.push(`/queue?page=${currentPage - 1}&q=${searchQuery}&status=${statusFilter || ''}&sort=${sortKey}&sortdir=${sortDir}`, { scroll: false })}
-                  disabled={currentPage === 1}
+                  onClick={() => handlePage('prev')}
+                  disabled={page === 1}
                   className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <span className="text-xs text-slate-500 dark:text-slate-400 px-2">
-                  Halaman {currentPage}
+                  {page} / {totalPages}
                 </span>
                 <button
-                  onClick={() => router.push(`/queue?page=${currentPage + 1}&q=${searchQuery}&status=${statusFilter || ''}&sort=${sortKey}&sortdir=${sortDir}`, { scroll: false })}
-                  disabled={offset + PAGE_SIZE >= data.total}
+                  onClick={() => handlePage('next')}
+                  disabled={page >= totalPages}
                   className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -261,22 +282,19 @@ function QueueContent() {
             ))}
             <div className="flex items-center justify-between gap-4 pt-4">
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Menampilkan {Math.min(offset + 1, data.total)} - {Math.min(offset + PAGE_SIZE, data.total)} dari {data.total} konten
+                Halaman {page} / {totalPages}
               </p>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => router.push(`/queue?page=${currentPage - 1}&q=${searchQuery}&status=${statusFilter || ''}&sort=${sortKey}&sortdir=${sortDir}`, { scroll: false })}
-                  disabled={currentPage === 1}
+                  onClick={() => handlePage('prev')}
+                  disabled={page === 1}
                   className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-xs text-slate-500 dark:text-slate-400 px-2">
-                  Halaman {currentPage}
-                </span>
                 <button
-                  onClick={() => router.push(`/queue?page=${currentPage + 1}&q=${searchQuery}&status=${statusFilter || ''}&sort=${sortKey}&sortdir=${sortDir}`, { scroll: false })}
-                  disabled={offset + PAGE_SIZE >= data.total}
+                  onClick={() => handlePage('next')}
+                  disabled={page >= totalPages}
                   className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -288,56 +306,4 @@ function QueueContent() {
       </div>
     </div>
   );
-}
-
-function useAwaitData(
-  searchQuery: string,
-  statusFilter: string | null,
-  sortKey: string,
-  sortDir: 'asc' | 'desc',
-  limit: number,
-  offset: number
-) {
-  const [data, setData] = useState<{ posts: ThreadsPost[]; total: number }>({ posts: [], total: 0 });
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-
-    const params = new URLSearchParams({
-      limit: String(limit),
-      offset: String(offset),
-      sortBy: sortKey,
-      sortDir,
-      q: searchQuery,
-    });
-    if (statusFilter) params.set('status', statusFilter);
-
-    fetch(`/api/queue?${params.toString()}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Gagal memuat data');
-        return res.json();
-      })
-      .then((result) => {
-        if (!cancelled) {
-          setData(result);
-          setIsLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err.message || 'Terjadi kesalahan');
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [searchQuery, statusFilter, sortKey, sortDir, limit, offset]);
-
-  return { data, error, isLoading };
 }

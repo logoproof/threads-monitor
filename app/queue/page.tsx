@@ -1,7 +1,7 @@
 'use client';
 
 import { formatDateTimeWIB } from '@/lib/date-utils';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ThreadsPost } from '@/lib/types';
@@ -20,6 +20,14 @@ const SORT_COLUMNS = [
 const PAGE_SIZE = 10;
 
 export default function QueuePage() {
+  return (
+    <Suspense fallback={<div className="max-w-6xl mx-auto"><SkeletonTable rows={10} cols={6} /></div>}>
+      <QueueContent />
+    </Suspense>
+  );
+}
+
+function QueueContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pageParam = searchParams.get('page');

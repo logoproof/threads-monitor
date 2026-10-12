@@ -27,20 +27,58 @@ function parseRow(row: any[]): ThreadsPost {
   };
 }
 
-export async function getAllPosts(): Promise<ThreadsPost[]> {
+export interface GetAllPostsOptions {
+  limit?: number;
+  offset?: number;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  searchQuery?: string;
+  statusFilter?: string;
+}
+
+export async function getAllPosts(options: GetAllPostsOptions = {}): Promise<{ posts: ThreadsPost[]; total: number }> {
+  const { limit = 50, offset = 0, sortBy = 'id', sortDir = 'desc', searchQuery = '', statusFilter = '' } = options;
   const rows = await getSheetRows('ANTREAN', 'A2:I');
-  return rows
+  let posts = rows
     .filter(row => row && row[0])
     .map(parseRow);
+
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    posts = posts.filter(post =>
+      post.id.toLowerCase().includes(query) ||
+      post.ttema.toLowerCase().includes(query)
+    );
+  }
+
+  if (statusFilter) {
+    posts = posts.filter(post => post.tstatus.toLowerCase() === statusFilter.toLowerCase());
+  }
+
+  const total = posts.length;
+
+  posts.sort((a, b) => {
+    const aVal = (a as any)[sortBy] ?? '';
+    const bVal = (b as any)[sortBy] ?? '';
+    const dir = sortDir === 'asc' ? 1 : -1;
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return aVal.localeCompare(bVal) * dir;
+    }
+    return (aVal > bVal ? 1 : -1) * dir;
+  });
+
+  const paginated = posts.slice(offset, offset + limit);
+
+  return { posts: paginated, total };
 }
 
 export async function getPostById(id: string): Promise<ThreadsPost | null> {
-  const posts = await getAllPosts();
+  const { posts } = await getAllPosts({ limit: 1000 });
   return posts.find(p => p.id === id) ?? null;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const posts = await getAllPosts();
+  const { posts } = await getAllPosts({ limit: 1000 });
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 
   const byStatus: Record<PostStatus, number> = {

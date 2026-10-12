@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/ToastProvider';
 
 interface StatusSelectorProps {
   id: string;
@@ -11,7 +12,7 @@ interface StatusSelectorProps {
 export function StatusSelector({ id, currentStatus }: StatusSelectorProps) {
   const [status, setStatus] = useState(currentStatus.toLowerCase());
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const { addToast } = useToast();
   const router = useRouter();
 
   const handleStatusChange = async (newStatus: string) => {
@@ -23,7 +24,6 @@ export function StatusSelector({ id, currentStatus }: StatusSelectorProps) {
     if (!confirmChange) return;
 
     setLoading(true);
-    setMessage(null);
 
     try {
       const res = await fetch(`/api/sheets/post/${id}/status`, {
@@ -39,10 +39,10 @@ export function StatusSelector({ id, currentStatus }: StatusSelectorProps) {
       }
 
       setStatus(newStatus);
-      setMessage({ type: 'success', text: `Berhasil diubah ke ${newStatus}!` });
+      addToast('success', `Berhasil mengubah status ${id} ke "${newStatus}"`);
       router.refresh();
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
+      addToast('error', 'Gagal mengubah status', err.message);
     } finally {
       setLoading(false);
     }
@@ -74,16 +74,6 @@ export function StatusSelector({ id, currentStatus }: StatusSelectorProps) {
           <span className="text-[10px] text-slate-400 animate-spin">⏳</span>
         )}
       </div>
-
-      {message && (
-        <span
-          className={`text-[10px] font-medium leading-none mt-0.5 ${
-            message.type === 'success' ? 'text-emerald-600' : 'text-rose-600'
-          }`}
-        >
-          {message.text}
-        </span>
-      )}
     </div>
   );
 }

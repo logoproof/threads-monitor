@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { ToastProvider } from '@/components/ui/ToastProvider';
 import '@/app/globals.css';
 
 export const metadata = {
@@ -15,10 +16,12 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 min-w-0 p-4 pb-20 md:p-6 md:pb-6 overflow-y-auto">
-          {children}
-        </main>
+        <ToastProvider>
+          <Sidebar />
+          <main className="flex-1 min-w-0 p-4 pb-20 md:p-6 md:pb-6 overflow-y-auto">
+            {children}
+          </main>
+        </ToastProvider>
       </body>
     </html>
   );

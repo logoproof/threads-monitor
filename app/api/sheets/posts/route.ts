@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const statusFilter = searchParams.get('status') as PostStatus | null;
     const search = searchParams.get('q')?.toLowerCase();
 
-    let posts = await getAllPosts();
+    let { posts } = await getAllPosts();
 
     if (statusFilter) {
       posts = posts.filter(p => p.tstatus === statusFilter);

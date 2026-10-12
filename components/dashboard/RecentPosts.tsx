@@ -4,7 +4,20 @@ import Link from 'next/link';
 import { ThreadsPost } from '@/lib/types';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 
-export function RecentPosts({ posts }: { posts: ThreadsPost[] }) {
+interface RecentPostsProps {
+  posts: ThreadsPost[];
+  emptyMessage?: string;
+}
+
+export function RecentPosts({ posts, emptyMessage }: RecentPostsProps) {
+  if (posts.length === 0) {
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-12 text-center shadow-sm">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{emptyMessage || 'Tidak ada postingan terbaru'}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
@@ -26,7 +39,7 @@ export function RecentPosts({ posts }: { posts: ThreadsPost[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {posts.slice(0, 6).map((post) => (
+            {posts.map((post) => (
               <tr key={post.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                 <td className="py-3 font-mono text-xs font-semibold text-slate-600 dark:text-slate-300">
                   {post.id}

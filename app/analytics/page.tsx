@@ -1,6 +1,7 @@
 import { formatDateTimeWIB } from '@/lib/date-utils';
 import React from 'react';
 import { getAggregatedMetrics } from '@/lib/sheets/metrics';
+import { SkeletonGrid, SkeletonTable } from '@/components/ui/SkeletonLoader';
 
 export const revalidate = 60;
 
@@ -57,27 +58,25 @@ export default async function AnalyticsPage() {
           Performa Konten Individual
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs text-slate-500 border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="py-3 px-4 font-semibold">ID</th>
-                <th className="py-3 px-4 font-semibold">Tema</th>
-                <th className="py-3 px-4 font-semibold text-right">Views</th>
-                <th className="py-3 px-4 font-semibold text-right">Likes</th>
-                <th className="py-3 px-4 font-semibold text-right">Replies</th>
-                <th className="py-3 px-4 font-semibold text-right">Interaksi</th>
-                <th className="py-3 px-4 font-semibold text-right">Waktu Cek</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {summaries.length === 0 ? (
+          {summaries.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-sm">
+              Belum ada data metrik tersimpan di sheet METRICS.
+            </div>
+          ) : (
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs text-slate-500 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 text-sm">
-                    Belum ada data metrik tersimpan di sheet METRICS.
-                  </td>
+                  <th className="py-3 px-4 font-semibold">ID</th>
+                  <th className="py-3 px-4 font-semibold">Tema</th>
+                  <th className="py-3 px-4 font-semibold text-right">Views</th>
+                  <th className="py-3 px-4 font-semibold text-right">Likes</th>
+                  <th className="py-3 px-4 font-semibold text-right">Replies</th>
+                  <th className="py-3 px-4 font-semibold text-right">Interaksi</th>
+                  <th className="py-3 px-4 font-semibold text-right">Waktu Cek</th>
                 </tr>
-              ) : (
-                summaries.map((m) => (
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {summaries.map((m) => (
                   <tr key={m.content_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                     <td className="py-3 px-4 font-mono text-xs font-bold text-slate-600 dark:text-slate-300">
                       {m.content_id}
@@ -95,10 +94,10 @@ export default async function AnalyticsPage() {
                       {m.checked_at ? formatDateTimeWIB(m.checked_at) : '—'}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

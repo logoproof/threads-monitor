@@ -40,7 +40,8 @@ export async function getMetricsByContentId(contentId: string): Promise<ThreadsM
 }
 
 export async function getAggregatedMetrics(): Promise<ContentMetricsSummary[]> {
-  const [metrics, posts] = await Promise.all([getAllMetrics(), getAllPosts()]);
+  const [metrics, postsResult] = await Promise.all([getAllMetrics(), getAllPosts()]);
+  const posts = postsResult.posts;
   const postMap = new Map(posts.map(p => [p.id, p.ttema]));
 
   const grouped = new Map<string, ThreadsMetric[]>();

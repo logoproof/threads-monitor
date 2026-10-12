@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarClock, Pencil, X } from 'lucide-react';
+import { useToast } from '@/components/ui/ToastProvider';
 
 interface ScheduleEditorProps {
   id: string;
@@ -20,17 +21,17 @@ function toInputValue(value: string | null): string {
 
 export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEditorProps) {
   const router = useRouter();
+  const { addToast } = useToast();
   const initialValue = useMemo(() => toInputValue(scheduledAt), [scheduledAt]);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(initialValue);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
-  const openEditor = () => { setValue(initialValue); setMessage(null); setOpen(true); };
+  const openEditor = () => { setValue(initialValue); setOpen(true); };
 
   const save = async () => {
-    if (!value) { setMessage('Pilih tanggal dan jam terlebih dahulu.'); return; }
-    setSaving(true); setMessage(null);
+    if (!value) { addToast('error', 'Pilih tanggal dan jam terlebih dahulu.'); return; }
+    setSaving(true);
     try {
       const res = await fetch(`/api/sheets/post/${id}/schedule`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -38,14 +39,19 @@ export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEdi
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal menyimpan jadwal.');
-      setOpen(false); router.refresh();
-    } catch (err: any) { setMessage(err.message || 'Gagal menyimpan jadwal.'); }
-    finally { setSaving(false); }
+      setOpen(false);
+      addToast('success', 'Jadwal publish telah diperbarui.');
+      router.refresh();
+    } catch (err: any) {
+      addToast('error', 'Gagal menyimpan jadwal.', err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const clearSchedule = async () => {
     if (!window.confirm('Hapus jadwal publish untuk konten ini?')) return;
-    setSaving(true); setMessage(null);
+    setSaving(true);
     try {
       const res = await fetch(`/api/sheets/post/${id}/schedule`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -53,9 +59,14 @@ export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEdi
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal menghapus jadwal.');
-      setOpen(false); router.refresh();
-    } catch (err: any) { setMessage(err.message || 'Gagal menghapus jadwal.'); }
-    finally { setSaving(false); }
+      setOpen(false);
+      addToast('success', 'Jadwal publish telah dihapus.');
+      router.refresh();
+    } catch (err: any) {
+      addToast('error', 'Gagal menghapus jadwal.', err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -74,7 +85,6 @@ export function ScheduleEditor({ id, scheduledAt, compact = false }: ScheduleEdi
           </div>
           <input type="datetime-local" value={value} onChange={(e) => setValue(e.target.value)} disabled={saving}
             className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30" />
-          {message && <p className="mt-2 text-xs text-rose-600">{message}</p>}
           <div className="flex items-center justify-between gap-2 mt-4">
             <button type="button" onClick={clearSchedule} disabled={saving || !scheduledAt} className="text-xs text-rose-600 hover:underline disabled:opacity-40">Hapus jadwal</button>
             <div className="flex gap-2">

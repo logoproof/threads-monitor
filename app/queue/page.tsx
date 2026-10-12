@@ -1,10 +1,9 @@
 'use client';
 
 import { formatDateTimeWIB } from '@/lib/date-utils';
-import React, { use, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getAllPosts } from '@/lib/sheets/live-content';
 import { ThreadsPost } from '@/lib/types';
 import { StatusSelector } from '@/components/ui/StatusSelector';
 import { ScheduleEditor } from '@/components/ui/ScheduleEditor';
@@ -300,14 +299,20 @@ function useAwaitData(
     setIsLoading(true);
     setError(null);
 
-    getAllPosts({
-      limit,
-      offset,
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
       sortBy: sortKey,
       sortDir,
-      searchQuery,
-      statusFilter: statusFilter || undefined,
-    })
+      q: searchQuery,
+    });
+    if (statusFilter) params.set('status', statusFilter);
+
+    fetch(`/api/queue?${params.toString()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Gagal memuat data');
+        return res.json();
+      })
       .then((result) => {
         if (!cancelled) {
           setData(result);
